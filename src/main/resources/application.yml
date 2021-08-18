@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: assets-api
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+google:
+  drive:
+    applicationName: ${GOOGLE_API_APPLICATION_NAME:Renaissance-rentals}
+    clientId: ${GOOGLE_API_CLIENT_ID}
+    clientSecret: ${GOOGLE_API_CLIENT_SECRET}
+    refreshToken: ${GOOGLE_API_REFRESH_TOKEN}
+    tokenServer: https://oauth2.googleapis.com/token
+    defaultFolder: ${GOOGLE_DRIVE_FOLDER}
