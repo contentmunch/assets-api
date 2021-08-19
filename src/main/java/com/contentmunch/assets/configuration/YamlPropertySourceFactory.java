@@ -23,8 +23,6 @@ public class YamlPropertySourceFactory implements PropertySourceFactory {
                 .orElse(System.getProperty("spring.profiles.active"));
 
         log.info("AssetsApi active profile: " + activeProfile);
-        assert activeProfile != null;
-
         YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
         yamlFactory.setDocumentMatchers(properties -> {
             String profileProperty = properties.getProperty("spring.profiles");
