@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "google.drive")
-public class DriveConfig {
+public class AssetDriveConfig {
     private String clientId;
     private String clientSecret;
     private String refreshToken;

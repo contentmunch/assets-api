@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartException;
 @ControllerAdvice
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class GeneralExceptionAdvice {
+public class AssetsApiExceptionAdvice {
 
     @Value("${spring.servlet.multipart.max-file-size}")
     private String maxFileSize;
@@ -23,17 +23,17 @@ public class GeneralExceptionAdvice {
     @ExceptionHandler(MultipartException.class)
     @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
     @ResponseBody
-    public ErrorMessage handleMultipartException() {
-        return ErrorMessage.builder()
+    public AssetErrorMessage handleMultipartException() {
+        return AssetErrorMessage.builder()
                 .message("Total file size should not exceed " + maxFileSize)
                 .build();
     }
 
-    @ExceptionHandler(UnauthorizedException.class)
+    @ExceptionHandler(AssetUnauthorizedException.class)
     @ResponseStatus(value = HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public ErrorMessage handleUnauthorizedException(UnauthorizedException e) {
-        return ErrorMessage.builder()
+    public AssetErrorMessage handleUnauthorizedException(AssetUnauthorizedException e) {
+        return AssetErrorMessage.builder()
                 .message(e.getMessage())
                 .build();
     }
@@ -42,8 +42,8 @@ public class GeneralExceptionAdvice {
     @ExceptionHandler(AssetNotFoundException.class)
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
     @ResponseBody
-    public ErrorMessage handleAssetNotFoundException(AssetNotFoundException e) {
-        return ErrorMessage.builder()
+    public AssetErrorMessage handleAssetNotFoundException(AssetNotFoundException e) {
+        return AssetErrorMessage.builder()
                 .message(e.getMessage())
                 .build();
     }
@@ -51,8 +51,8 @@ public class GeneralExceptionAdvice {
     @ExceptionHandler(AssetException.class)
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public ErrorMessage handleAssetException(AssetException e) {
-        return ErrorMessage.builder()
+    public AssetErrorMessage handleAssetException(AssetException e) {
+        return AssetErrorMessage.builder()
                 .message(e.getMessage())
                 .build();
     }

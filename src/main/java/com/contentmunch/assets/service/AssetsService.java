@@ -1,10 +1,10 @@
 package com.contentmunch.assets.service;
 
-import com.contentmunch.assets.configuration.DriveConfig;
+import com.contentmunch.assets.configuration.AssetDriveConfig;
 import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.data.Assets;
 import com.contentmunch.assets.exception.AssetException;
-import com.contentmunch.assets.exception.UnauthorizedException;
+import com.contentmunch.assets.exception.AssetUnauthorizedException;
 import com.contentmunch.assets.utils.LocalFileUtils;
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
@@ -36,25 +36,25 @@ public class AssetsService {
     private static final String IMAGE_FIELDS = "id, name, description, parents, imageMediaMetadata, thumbnailLink, webContentLink";
     private final Drive drive;
 
-    public AssetsService(DriveConfig driveConfig) throws UnauthorizedException, AssetException {
+    public AssetsService(AssetDriveConfig assetDriveConfig) throws AssetUnauthorizedException, AssetException {
         TokenResponse response = new TokenResponse();
-        response.setRefreshToken(driveConfig.getRefreshToken());
+        response.setRefreshToken(assetDriveConfig.getRefreshToken());
         try {
             this.drive = new Drive.Builder(newTrustedTransport(), getDefaultInstance(),
                     new Credential.Builder(BearerToken.authorizationHeaderAccessMethod()).setTransport(
                             newTrustedTransport())
                             .setJsonFactory(getDefaultInstance())
                             .setTokenServerUrl(
-                                    new GenericUrl(driveConfig.getTokenServer()))
+                                    new GenericUrl(assetDriveConfig.getTokenServer()))
                             .setClientAuthentication(new BasicAuthentication(
-                                    driveConfig.getClientId(), driveConfig.getClientSecret()))
+                                    assetDriveConfig.getClientId(), assetDriveConfig.getClientSecret()))
                             .build()
                             .setFromTokenResponse(response))
-                    .setApplicationName(driveConfig.getApplicationName())
+                    .setApplicationName(assetDriveConfig.getApplicationName())
                     .build();
         } catch (GeneralSecurityException e) {
             log.error("Security Exception", e);
-            throw new UnauthorizedException(e.getMessage());
+            throw new AssetUnauthorizedException(e.getMessage());
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
