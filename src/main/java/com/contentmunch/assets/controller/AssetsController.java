@@ -1,5 +1,6 @@
 package com.contentmunch.assets.controller;
 
+import com.contentmunch.assets.configuration.AssetDriveConfig;
 import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.data.Assets;
 import com.contentmunch.assets.service.AssetsService;
@@ -19,6 +20,12 @@ import static java.util.Optional.ofNullable;
 public class AssetsController {
 
     private final AssetsService assetsService;
+    private final AssetDriveConfig assetDriveConfig;
+
+    @GetMapping("/list")
+    public ResponseEntity<Assets> list(@RequestParam(required = false) String nextPageToken) {
+        return ResponseEntity.ok(assetsService.list(assetDriveConfig.getDefaultFolder(), Optional.ofNullable(nextPageToken)));
+    }
 
     @GetMapping("/list/{folderId}")
     public ResponseEntity<Assets> list(@PathVariable String folderId,
@@ -29,7 +36,6 @@ public class AssetsController {
 
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> get(@PathVariable String id) {
-
         return ResponseEntity.ok(assetsService.getFile(id));
     }
 
