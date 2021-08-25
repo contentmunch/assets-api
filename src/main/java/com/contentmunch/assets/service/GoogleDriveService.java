@@ -1,8 +1,8 @@
 package com.contentmunch.assets.service;
 
 import com.contentmunch.assets.configuration.AssetDriveConfig;
-import com.contentmunch.assets.data.Asset;
-import com.contentmunch.assets.data.Assets;
+import com.contentmunch.assets.data.drive.DriveAsset;
+import com.contentmunch.assets.data.drive.DriveAssets;
 import com.contentmunch.assets.exception.AssetException;
 import com.contentmunch.assets.exception.AssetUnauthorizedException;
 import com.contentmunch.assets.utils.LocalFileUtils;
@@ -31,12 +31,12 @@ import static com.google.api.client.json.jackson2.JacksonFactory.getDefaultInsta
 
 @Service
 @Slf4j
-public class AssetsService {
+public class GoogleDriveService {
 
     private static final String IMAGE_FIELDS = "id, name, description, parents, imageMediaMetadata, thumbnailLink, webContentLink";
     private final Drive drive;
 
-    public AssetsService(AssetDriveConfig assetDriveConfig) throws AssetUnauthorizedException, AssetException {
+    public GoogleDriveService(AssetDriveConfig assetDriveConfig) {
         TokenResponse response = new TokenResponse();
         response.setRefreshToken(assetDriveConfig.getRefreshToken());
         try {
@@ -62,18 +62,18 @@ public class AssetsService {
     }
 
 
-    public Assets list(String folderId, Optional<String> pageToken) throws AssetException {
+    public DriveAssets list(String folderId, int pageSize, Optional<String> pageToken) {
         Drive.Files.List list = null;
         try {
             list = drive.files().list()
                     .setQ("'" + folderId + "' in parents")
-                    .setPageSize(1000)
+                    .setPageSize(pageSize)
                     .setFields("nextPageToken, files(" + IMAGE_FIELDS + ")");
             pageToken.ifPresent(list::setPageToken);
             FileList result = list.execute();
-            return Assets
+            return DriveAssets
                     .builder()
-                    .assets(result.getFiles().stream().map(file -> Asset.from(file, folderId))
+                    .driveAssets(result.getFiles().stream().map(file -> DriveAsset.from(file, folderId))
                             .collect(Collectors.toList()))
                     .nextPageToken(result.getNextPageToken())
                     .build();
@@ -83,7 +83,17 @@ public class AssetsService {
         }
     }
 
-    public byte[] getFile(String fileId) throws AssetException {
+    public DriveAsset get(String assetId) {
+        try {
+            File file = drive.files().get(assetId).setFields(IMAGE_FIELDS).execute();
+            return DriveAsset.from(file);
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
+    public byte[] getFile(String fileId) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Drive.Files.Get file = drive.files().get(fileId);
@@ -95,7 +105,7 @@ public class AssetsService {
         }
     }
 
-    public Asset update(String folderId, MultipartFile multipartFile, String id, String name, Optional<String> description) throws AssetException {
+    public DriveAsset update(String folderId, MultipartFile multipartFile, String id, String name, Optional<String> description) {
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
@@ -105,7 +115,7 @@ public class AssetsService {
             File file = drive.files().update(id, fileMetadata, mediaContent).setFields("id")
                     .setSupportsAllDrives(true)
                     .execute();
-            return Asset.from(file, folderId);
+            return DriveAsset.from(file, folderId);
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
@@ -114,7 +124,7 @@ public class AssetsService {
         }
     }
 
-    public Asset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) throws AssetException {
+    public DriveAsset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
@@ -126,7 +136,7 @@ public class AssetsService {
                     .setFields(IMAGE_FIELDS)
                     .setSupportsAllDrives(true)
                     .execute();
-            return Asset.from(file, folderId);
+            return DriveAsset.from(file, folderId);
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());

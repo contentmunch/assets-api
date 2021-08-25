@@ -1,4 +1,4 @@
-package com.contentmunch.assets.data;
+package com.contentmunch.assets.data.drive;
 
 import lombok.Builder;
 import lombok.Data;
@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class Assets {
-    private List<Asset> assets;
+public class DriveAssets {
+    private List<DriveAsset> driveAssets;
     private String nextPageToken;
 }
