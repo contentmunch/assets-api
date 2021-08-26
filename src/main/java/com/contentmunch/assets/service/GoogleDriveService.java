@@ -4,6 +4,7 @@ import com.contentmunch.assets.configuration.AssetDriveConfig;
 import com.contentmunch.assets.data.drive.DriveAsset;
 import com.contentmunch.assets.data.drive.DriveAssets;
 import com.contentmunch.assets.exception.AssetException;
+import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.exception.AssetUnauthorizedException;
 import com.contentmunch.assets.utils.LocalFileUtils;
 import com.google.api.client.auth.oauth2.BearerToken;
@@ -33,7 +34,7 @@ import static com.google.api.client.json.jackson2.JacksonFactory.getDefaultInsta
 @Slf4j
 public class GoogleDriveService {
 
-    private static final String IMAGE_FIELDS = "id, name, description, parents, imageMediaMetadata, thumbnailLink, webContentLink";
+    private static final String IMAGE_FIELDS = "id, name, description, mimeType, parents, imageMediaMetadata, thumbnailLink, webContentLink";
     private final Drive drive;
 
     public GoogleDriveService(AssetDriveConfig assetDriveConfig) {
@@ -63,20 +64,22 @@ public class GoogleDriveService {
 
 
     public DriveAssets list(String folderId, int pageSize, Optional<String> pageToken) {
-        Drive.Files.List list = null;
+
         try {
-            list = drive.files().list()
+            Drive.Files.List list = drive.files().list()
                     .setQ("'" + folderId + "' in parents")
                     .setPageSize(pageSize)
                     .setFields("nextPageToken, files(" + IMAGE_FIELDS + ")");
             pageToken.ifPresent(list::setPageToken);
             FileList result = list.execute();
+
             return DriveAssets
                     .builder()
-                    .driveAssets(result.getFiles().stream().map(file -> DriveAsset.from(file, folderId))
+                    .driveAssets(result.getFiles().stream().filter(file -> file.getMimeType().contains("image")).map(file -> DriveAsset.from(file, folderId))
                             .collect(Collectors.toList()))
                     .nextPageToken(result.getNextPageToken())
                     .build();
+
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
@@ -86,7 +89,10 @@ public class GoogleDriveService {
     public DriveAsset get(String assetId) {
         try {
             File file = drive.files().get(assetId).setFields(IMAGE_FIELDS).execute();
-            return DriveAsset.from(file);
+            if (file.getMimeType().contains("image"))
+                return DriveAsset.from(file);
+            else
+                throw new AssetNotFoundException("Asset with assetId: " + assetId + " not found/ or is not an image");
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
