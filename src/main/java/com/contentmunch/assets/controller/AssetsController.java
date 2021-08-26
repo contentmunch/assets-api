@@ -44,13 +44,20 @@ public class AssetsController {
     public ResponseEntity<Asset> post(@RequestParam String folderId,
                                       @RequestParam MultipartFile file,
                                       @RequestParam String name,
-                                      @RequestParam(required = false) String id,
                                       @RequestParam(required = false) String description) {
 
-        if (id != null) {
-            return ResponseEntity.ok(assetService.update(folderId, file, id, name, ofNullable(description)));
-        } else {
-            return ResponseEntity.ok(assetService.create(folderId, file, name, ofNullable(description)));
-        }
+        return ResponseEntity.ok(assetService.create(folderId, file, name, ofNullable(description)));
+    }
+
+    @PutMapping("/")
+    public ResponseEntity<Asset> put(@RequestParam String folderId,
+                                     @RequestParam MultipartFile file,
+                                     @RequestParam String name,
+                                     @RequestParam String id,
+                                     @RequestParam(required = false) String description) {
+
+
+        return ResponseEntity.ok(assetService.update(folderId, file, id, name, ofNullable(description)));
+
     }
 }
