@@ -34,6 +34,10 @@ public class AssetService {
         return assetAssembler.toModel(googleDriveService.update(folderId, multipartFile, id, name, description));
     }
 
+    public void delete(String id) {
+        googleDriveService.delete(id);
+    }
+
     public CollectionModel<Asset> list(String folderId, int pageSize, Optional<String> nextPageToken) {
         DriveAssets driveAssets = googleDriveService.list(folderId, pageSize, nextPageToken);
         CollectionModel<Asset> model = CollectionModel.of(driveAssets.getDriveAssets().stream()

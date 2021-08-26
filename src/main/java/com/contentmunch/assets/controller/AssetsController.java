@@ -4,6 +4,7 @@ import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.service.AssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +32,12 @@ public class AssetsController {
     @GetMapping("/{id}")
     public ResponseEntity<Asset> get(@PathVariable String id) {
         return ResponseEntity.ok(assetService.get(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        assetService.delete(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/")

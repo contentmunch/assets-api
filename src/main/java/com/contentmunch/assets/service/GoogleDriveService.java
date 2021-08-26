@@ -93,6 +93,15 @@ public class GoogleDriveService {
         }
     }
 
+    public void delete(String assetId) {
+        try {
+            drive.files().delete(assetId).execute();
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
     public byte[] getFile(String fileId) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
