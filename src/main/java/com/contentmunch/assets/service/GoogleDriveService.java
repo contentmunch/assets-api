@@ -122,6 +122,22 @@ public class GoogleDriveService {
         }
     }
 
+    public DriveFolder getDrive(String folderId) {
+        try {
+            File file = drive.files().get(folderId)
+                    .setFields("id,name")
+                    .execute();
+            return DriveFolder.builder()
+                    .id(file.getId())
+                    .name(file.getName())
+                    .build();
+
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
     public void delete(String assetId) {
         try {
             drive.files().delete(assetId).execute();

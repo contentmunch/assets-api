@@ -6,11 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
 
 @RestController
 @CrossOrigin
@@ -28,13 +25,5 @@ public class AssetsController {
         return ResponseEntity.ok(assetService.list(folderId, pageSize, Optional.ofNullable(nextPageToken)));
     }
 
-    @PostMapping("/{folderId}")
-    public ResponseEntity<Asset> post(@PathVariable String folderId,
-                                      @RequestParam MultipartFile file,
-                                      @RequestParam String name,
-                                      @RequestParam(required = false) String description) {
-
-        return ResponseEntity.ok(assetService.create(folderId, file, name, ofNullable(description)));
-    }
 
 }

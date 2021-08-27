@@ -14,10 +14,11 @@ public class AssetFolderController {
 
     private final AssetService assetService;
 
-    @PostMapping("/{folderId}")
-    public ResponseEntity<AssetFolder> post(@PathVariable String folderId,
-                                            @RequestParam String name) {
+    @GetMapping("/{folderId}")
+    public ResponseEntity<AssetFolder> get(@PathVariable String folderId) {
 
-        return ResponseEntity.ok(assetService.createFolder(folderId, name));
+        return ResponseEntity.ok(assetService.getFolder(folderId));
     }
+
+
 }

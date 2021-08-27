@@ -2,9 +2,9 @@ package com.contentmunch.assets.service;
 
 import com.contentmunch.assets.controller.AssetsController;
 import com.contentmunch.assets.data.Asset;
-import com.contentmunch.assets.data.AssetAssembler;
+import com.contentmunch.assets.data.assembler.AssetAssembler;
 import com.contentmunch.assets.data.AssetFolder;
-import com.contentmunch.assets.data.AssetFolderAssembler;
+import com.contentmunch.assets.data.assembler.AssetFolderAssembler;
 import com.contentmunch.assets.data.drive.DriveAssets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
@@ -34,12 +34,16 @@ public class AssetService {
         return assetAssembler.toModel(googleDriveService.create(folderId, multipartFile, name, description));
     }
 
-    public Asset update(String id,MultipartFile multipartFile, String name, Optional<String> description) {
+    public Asset update(String id, MultipartFile multipartFile, String name, Optional<String> description) {
         return assetAssembler.toModel(googleDriveService.update(multipartFile, id, name, description));
     }
 
     public AssetFolder createFolder(String folderId, String name) {
         return assetFolderAssembler.toModel(googleDriveService.createDrive(folderId, name));
+    }
+
+    public AssetFolder getFolder(String folderId) {
+        return assetFolderAssembler.toModel(googleDriveService.getDrive(folderId));
     }
 
     public void delete(String id) {

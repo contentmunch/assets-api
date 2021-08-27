@@ -1,7 +1,8 @@
-package com.contentmunch.assets.data;
+package com.contentmunch.assets.data.assembler;
 
 import com.contentmunch.assets.controller.AssetController;
 import com.contentmunch.assets.controller.AssetsController;
+import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.data.drive.DriveAsset;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
