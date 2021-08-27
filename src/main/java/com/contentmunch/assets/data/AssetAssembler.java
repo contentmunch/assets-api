@@ -1,5 +1,6 @@
 package com.contentmunch.assets.data;
 
+import com.contentmunch.assets.controller.AssetController;
 import com.contentmunch.assets.controller.AssetsController;
 import com.contentmunch.assets.data.drive.DriveAsset;
 import org.springframework.hateoas.Link;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AssetAssembler extends RepresentationModelAssemblerSupport<DriveAsset, Asset> {
     public AssetAssembler() {
-        super(AssetsController.class, Asset.class);
+        super(AssetController.class, Asset.class);
     }
 
     @Override

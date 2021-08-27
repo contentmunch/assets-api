@@ -3,6 +3,7 @@ package com.contentmunch.assets.service;
 import com.contentmunch.assets.configuration.AssetDriveConfig;
 import com.contentmunch.assets.data.drive.DriveAsset;
 import com.contentmunch.assets.data.drive.DriveAssets;
+import com.contentmunch.assets.data.drive.DriveFolder;
 import com.contentmunch.assets.exception.AssetException;
 import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.exception.AssetUnauthorizedException;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -99,6 +101,27 @@ public class GoogleDriveService {
         }
     }
 
+    public DriveFolder createDrive(String folderId, String name) {
+        try {
+            File fileMetadata = new File();
+            fileMetadata.setName(name);
+            fileMetadata.setParents(Collections.singletonList(folderId));
+            fileMetadata.setMimeType("application/vnd.google-apps.folder");
+
+            File file = drive.files().create(fileMetadata)
+                    .setFields("id,name")
+                    .execute();
+            return DriveFolder.builder()
+                    .id(file.getId())
+                    .name(file.getName())
+                    .build();
+
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
     public void delete(String assetId) {
         try {
             drive.files().delete(assetId).execute();
@@ -120,7 +143,7 @@ public class GoogleDriveService {
         }
     }
 
-    public DriveAsset update(String folderId, MultipartFile multipartFile, String id, String name, Optional<String> description) {
+    public DriveAsset update(MultipartFile multipartFile, String id, String name, Optional<String> description) {
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
@@ -130,7 +153,7 @@ public class GoogleDriveService {
             File file = drive.files().update(id, fileMetadata, mediaContent).setFields("id")
                     .setSupportsAllDrives(true)
                     .execute();
-            return DriveAsset.from(file, folderId);
+            return DriveAsset.from(file);
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
