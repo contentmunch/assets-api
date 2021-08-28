@@ -148,7 +148,7 @@ public class GoogleDriveService {
                     .setQ("mimeType = 'application/vnd.google-apps.folder' and name = '" + name + "' and '" + folderId + "' in parents")
                     .setFields("files(id,name)")
                     .execute();
-            if (result == null || result.isEmpty())
+            if (result.getFiles().isEmpty())
                 return Optional.empty();
 
             return Optional.of(DriveFolder.builder()
