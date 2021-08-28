@@ -2,8 +2,8 @@ package com.contentmunch.assets.service;
 
 import com.contentmunch.assets.controller.AssetsController;
 import com.contentmunch.assets.data.Asset;
-import com.contentmunch.assets.data.assembler.AssetAssembler;
 import com.contentmunch.assets.data.AssetFolder;
+import com.contentmunch.assets.data.assembler.AssetAssembler;
 import com.contentmunch.assets.data.assembler.AssetFolderAssembler;
 import com.contentmunch.assets.data.drive.DriveAssets;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +31,7 @@ public class AssetService {
     }
 
     public Asset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {
+
         return assetAssembler.toModel(googleDriveService.create(folderId, multipartFile, name, description));
     }
 
@@ -44,6 +45,11 @@ public class AssetService {
 
     public AssetFolder getFolder(String folderId) {
         return assetFolderAssembler.toModel(googleDriveService.getDrive(folderId));
+    }
+
+    public Optional<AssetFolder> getFolder(String folderId, String name) {
+        var driveFolder = googleDriveService.getDriveByName(folderId, name);
+        return driveFolder.isEmpty() ? Optional.empty() : Optional.of(assetFolderAssembler.toModel(driveFolder.get()));
     }
 
     public void delete(String id) {

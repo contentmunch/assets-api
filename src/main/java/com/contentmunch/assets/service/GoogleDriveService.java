@@ -103,6 +103,10 @@ public class GoogleDriveService {
 
     public DriveFolder createDrive(String folderId, String name) {
         try {
+            var driveFolder = getDriveByName(folderId, name);
+            if (driveFolder.isPresent())
+                return driveFolder.get();
+
             File fileMetadata = new File();
             fileMetadata.setName(name);
             fileMetadata.setParents(Collections.singletonList(folderId));
@@ -131,6 +135,26 @@ public class GoogleDriveService {
                     .id(file.getId())
                     .name(file.getName())
                     .build();
+
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
+    public Optional<DriveFolder> getDriveByName(String folderId, String name) {
+        try {
+            FileList result = drive.files().list()
+                    .setQ("mimeType = 'application/vnd.google-apps.folder' and name = '" + name + "' and '" + folderId + "' in parents")
+                    .setFields("id,name")
+                    .execute();
+            if (result == null || result.isEmpty())
+                return Optional.empty();
+
+            return Optional.of(DriveFolder.builder()
+                    .id(result.getFiles().get(0).getId())
+                    .name(result.getFiles().get(0).getName())
+                    .build());
 
         } catch (IOException e) {
             log.error("IO Exception", e);
