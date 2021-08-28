@@ -146,7 +146,7 @@ public class GoogleDriveService {
         try {
             FileList result = drive.files().list()
                     .setQ("mimeType = 'application/vnd.google-apps.folder' and name = '" + name + "' and '" + folderId + "' in parents")
-                    .setFields("id,name")
+                    .setFields("files(id,name)")
                     .execute();
             if (result == null || result.isEmpty())
                 return Optional.empty();
