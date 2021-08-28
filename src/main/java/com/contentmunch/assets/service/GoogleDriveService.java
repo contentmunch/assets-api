@@ -68,12 +68,14 @@ public class GoogleDriveService {
     public DriveAssets list(String folderId, int pageSize, Optional<String> pageToken) {
 
         try {
+            log.debug("Listing drive: {} with pageSize: {} and pageToken {}", folderId, pageSize, pageToken);
             Drive.Files.List list = drive.files().list()
                     .setQ("'" + folderId + "' in parents")
                     .setPageSize(pageSize)
                     .setFields("nextPageToken, files(" + IMAGE_FIELDS + ")");
             pageToken.ifPresent(list::setPageToken);
             FileList result = list.execute();
+
 
             return DriveAssets
                     .builder()
@@ -91,6 +93,7 @@ public class GoogleDriveService {
     public DriveAsset get(String assetId) {
         try {
             File file = drive.files().get(assetId).setFields(IMAGE_FIELDS).execute();
+            log.debug("Getting drive asset for assetId: {}", assetId);
             if (file.getMimeType().contains("image"))
                 return DriveAsset.from(file);
             else
@@ -104,8 +107,10 @@ public class GoogleDriveService {
     public DriveFolder createDrive(String folderId, String name) {
         try {
             var driveFolder = getDriveByName(folderId, name);
-            if (driveFolder.isPresent())
+            if (driveFolder.isPresent()) {
+                log.debug("Drive folder not created, folder with folderId: {} and name: {} exits!", folderId, name);
                 return driveFolder.get();
+            }
 
             File fileMetadata = new File();
             fileMetadata.setName(name);
@@ -115,6 +120,7 @@ public class GoogleDriveService {
             File file = drive.files().create(fileMetadata)
                     .setFields("id,name")
                     .execute();
+            log.debug("Drive folder with folderId: {} and name: {} created successfully!", folderId, name);
             return DriveFolder.builder()
                     .id(file.getId())
                     .name(file.getName())
