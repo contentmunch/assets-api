@@ -216,7 +216,7 @@ public class GoogleDriveService {
             FileContent mediaContent = new FileContent(imageType, LocalFileUtils.from(url));
 
             File file = drive.files().create(fileMetadata, mediaContent)
-                    .setFields("id,name")
+                    .setFields(IMAGE_FIELDS)
                     .setSupportsAllDrives(true)
                     .execute();
             return DriveAsset.from(file);
