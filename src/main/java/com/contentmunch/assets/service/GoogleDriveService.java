@@ -188,22 +188,29 @@ public class GoogleDriveService {
         }
     }
 
-    public DriveAsset update(MultipartFile multipartFile, String id, String name, Optional<String> description) {
+    public DriveAsset update(String id, Optional<MultipartFile> multipartFile, Optional<String> name, Optional<String> description) {
         try {
             File fileMetadata = new File();
-            fileMetadata.setName(name);
-            fileMetadata.setDescription(description.orElseGet(() -> LocalFileUtils.stripExtension(multipartFile.getOriginalFilename())));
-            FileContent mediaContent = new FileContent(multipartFile.getContentType(), LocalFileUtils.from(multipartFile));
+            name.ifPresent(fileMetadata::setName);
+            description.ifPresent(fileMetadata::setDescription);
 
-            File file = drive.files().update(id, fileMetadata, mediaContent).setFields("id")
+            if (multipartFile.isPresent()) {
+                FileContent mediaContent = new FileContent(multipartFile.get().getContentType(), LocalFileUtils.from(multipartFile.get()));
+                return DriveAsset.from(drive.files().update(id, fileMetadata, mediaContent)
+                        .setFields(IMAGE_FIELDS)
+                        .setSupportsAllDrives(true)
+                        .execute());
+            }
+
+            return DriveAsset.from(drive.files().update(id, fileMetadata)
+                    .setFields(IMAGE_FIELDS)
                     .setSupportsAllDrives(true)
-                    .execute();
-            return DriveAsset.from(file);
+                    .execute());
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
         } finally {
-            LocalFileUtils.deleteTempFile(multipartFile);
+            multipartFile.ifPresent(LocalFileUtils::deleteTempFile);
         }
     }
 
