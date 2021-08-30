@@ -64,7 +64,6 @@ public class GoogleDriveService {
         }
     }
 
-
     public DriveAssets list(String folderId, int pageSize, Optional<String> pageToken) {
 
         try {
@@ -205,6 +204,28 @@ public class GoogleDriveService {
             throw new AssetException(e.getMessage());
         } finally {
             LocalFileUtils.deleteTempFile(multipartFile);
+        }
+    }
+
+    public DriveAsset create(String folderId, String url, String imageType, String name, Optional<String> description) {
+        try {
+            File fileMetadata = new File();
+            fileMetadata.setName(name);
+            description.ifPresent(fileMetadata::setDescription);
+            fileMetadata.setParents(List.of(folderId));
+            FileContent mediaContent = new FileContent(imageType, LocalFileUtils.from(url));
+
+            File file = drive.files().create(fileMetadata, mediaContent)
+                    .setFields("id,name")
+                    .setSupportsAllDrives(true)
+                    .execute();
+            return DriveAsset.from(file);
+
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        } finally {
+            LocalFileUtils.deleteUrlFile();
         }
     }
 
