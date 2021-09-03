@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.contentmunch.assets.utils.LocalFileUtils.*;
 import static com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.newTrustedTransport;
 import static com.google.api.client.json.jackson2.JacksonFactory.getDefaultInstance;
 
@@ -195,7 +196,10 @@ public class GoogleDriveService {
             description.ifPresent(fileMetadata::setDescription);
 
             if (multipartFile.isPresent()) {
-                FileContent mediaContent = new FileContent(multipartFile.get().getContentType(), LocalFileUtils.from(multipartFile.get()));
+                fileMetadata.setDescription(
+                        description.orElseGet(() -> stripExtension(multipartFile.get().getOriginalFilename()))
+                );
+                FileContent mediaContent = new FileContent(multipartFile.get().getContentType(), from(multipartFile.get()));
                 return DriveAsset.from(drive.files().update(id, fileMetadata, mediaContent)
                         .setFields(IMAGE_FIELDS)
                         .setSupportsAllDrives(true)
@@ -220,7 +224,7 @@ public class GoogleDriveService {
             fileMetadata.setName(name);
             description.ifPresent(fileMetadata::setDescription);
             fileMetadata.setParents(List.of(folderId));
-            FileContent mediaContent = new FileContent(imageType, LocalFileUtils.from(url));
+            FileContent mediaContent = new FileContent(imageType, from(url));
 
             File file = drive.files().create(fileMetadata, mediaContent)
                     .setFields(IMAGE_FIELDS)
@@ -232,7 +236,7 @@ public class GoogleDriveService {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
         } finally {
-            LocalFileUtils.deleteUrlFile();
+            deleteUrlFile();
         }
     }
 
@@ -242,7 +246,7 @@ public class GoogleDriveService {
             fileMetadata.setName(name);
             fileMetadata.setDescription(description.orElseGet(multipartFile::getOriginalFilename));
             fileMetadata.setParents(List.of(folderId));
-            FileContent mediaContent = new FileContent(multipartFile.getContentType(), LocalFileUtils.from(multipartFile));
+            FileContent mediaContent = new FileContent(multipartFile.getContentType(), from(multipartFile));
 
             File file = drive.files().create(fileMetadata, mediaContent)
                     .setFields(IMAGE_FIELDS)
@@ -253,7 +257,7 @@ public class GoogleDriveService {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
         } finally {
-            LocalFileUtils.deleteTempFile(multipartFile);
+            deleteTempFile(multipartFile);
         }
     }
 }
