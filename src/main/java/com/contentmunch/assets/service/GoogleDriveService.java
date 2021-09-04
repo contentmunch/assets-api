@@ -195,6 +195,9 @@ public class GoogleDriveService {
             name.ifPresent(fileMetadata::setName);
             description.ifPresent(fileMetadata::setDescription);
             if (multipartFile.isPresent()) {
+                fileMetadata.setDescription(
+                        description.orElseGet(() -> stripExtension(multipartFile.get().getOriginalFilename()))
+                );
                 FileContent mediaContent = new FileContent(multipartFile.get().getContentType(), from(multipartFile.get()));
                 return DriveAsset.from(drive.files().update(id, fileMetadata, mediaContent)
                         .setFields(IMAGE_FIELDS)
@@ -218,10 +221,9 @@ public class GoogleDriveService {
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
-            var imageFile = from(url);
-            fileMetadata.setDescription(description.orElseGet(() -> stripExtension(imageFile.getName())));
+            description.ifPresent(fileMetadata::setDescription);
             fileMetadata.setParents(List.of(folderId));
-            FileContent mediaContent = new FileContent(imageType, imageFile);
+            FileContent mediaContent = new FileContent(imageType, from(url));
 
             File file = drive.files().create(fileMetadata, mediaContent)
                     .setFields(IMAGE_FIELDS)
