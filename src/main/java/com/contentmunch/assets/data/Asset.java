@@ -15,4 +15,5 @@ public class Asset extends RepresentationModel<Asset> {
     private String folderId;
     private Integer height;
     private Integer width;
+    private String mimeType;
 }

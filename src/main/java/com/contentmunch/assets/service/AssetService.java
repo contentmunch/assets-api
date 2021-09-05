@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +29,15 @@ public class AssetService {
 
     public Asset get(String id) {
         return assetAssembler.toModel(googleDriveService.get(id));
+    }
+
+    public Optional<Asset> fromUrl(String url) {
+        var parameters = UriComponentsBuilder.fromUriString(url).build().getQueryParams();
+        var id = parameters.getFirst("id");
+        if (id != null)
+            return Optional.of(get(id));
+        else
+            return Optional.empty();
     }
 
     public Asset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {

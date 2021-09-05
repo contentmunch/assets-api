@@ -1,7 +1,6 @@
 package com.contentmunch.assets.data.assembler;
 
 import com.contentmunch.assets.controller.AssetController;
-import com.contentmunch.assets.controller.AssetsController;
 import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.data.drive.DriveAsset;
 import org.springframework.hateoas.Link;
@@ -21,6 +20,7 @@ public class AssetAssembler extends RepresentationModelAssemblerSupport<DriveAss
         asset.setName(driveAsset.getName());
         asset.setDescription(driveAsset.getDescription());
         asset.setFolderId(driveAsset.getFolderId());
+        asset.setMimeType(driveAsset.getMimeType());
         asset.setHeight(driveAsset.getHeight());
         asset.setWidth(driveAsset.getWidth());
         asset.add(Link.of(driveAsset.getThumbnailAsset(), "thumbnailAsset"));

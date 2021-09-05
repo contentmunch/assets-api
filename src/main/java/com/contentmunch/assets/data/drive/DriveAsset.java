@@ -9,6 +9,7 @@ import lombok.Data;
 public class DriveAsset {
     private String id;
     private String name;
+    private String mimeType;
     private String description;
     private String folderId;
     private Integer height;
@@ -25,6 +26,7 @@ public class DriveAsset {
                 .name(file.getName())
                 .description(file.getDescription())
                 .folderId(folderId)
+                .mimeType(file.getMimeType())
                 .height(file.getImageMediaMetadata().getHeight())
                 .width(file.getImageMediaMetadata().getWidth())
                 .thumbnailAsset(file.getThumbnailLink())
@@ -40,6 +42,7 @@ public class DriveAsset {
                 .name(file.getName())
                 .description(file.getDescription())
                 .folderId(!file.getParents().isEmpty() ? file.getParents().get(0) : "")
+                .mimeType(file.getMimeType())
                 .height(file.getImageMediaMetadata().getHeight())
                 .width(file.getImageMediaMetadata().getWidth())
                 .thumbnailAsset(file.getThumbnailLink())
