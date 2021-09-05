@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import static java.util.Arrays.stream;
@@ -18,7 +17,6 @@ import static java.util.Objects.requireNonNull;
 
 @Slf4j
 public final class LocalFileUtils {
-    private static final String DOWNLOADS = "/Users/asikpradhan/Downloads/";
 
     public static File from(MultipartFile multipartFile) throws IOException {
         File filePath = new File(requireNonNull(multipartFile.getOriginalFilename()));
@@ -35,25 +33,13 @@ public final class LocalFileUtils {
         }
     }
 
-    public static File from(String url, String format) throws IOException {
+    public static File from(String url, String mimeType) throws IOException {
 
         BufferedImage img = ImageIO.read(new URL(url.replaceAll(" ", "%20")));
+        var extension = extensionFrom(mimeType);
         File file = new File("downloaded");
-        ImageIO.write(img, format, file);
+        ImageIO.write(img, extension, file);
         return file;
-    }
-
-    public static URL urlFrom(String url) throws MalformedURLException {
-        return new URL(url.replaceAll(" ", "%20"));
-    }
-
-    public static String directory(String directoryName) {
-        String pathName = DOWNLOADS + directoryName;
-        File directory = new File(pathName);
-        if (!directory.exists()) {
-            directory.mkdir();
-        }
-        return pathName;
     }
 
 
@@ -68,5 +54,24 @@ public final class LocalFileUtils {
 
     public static boolean isImageFile(String url) {
         return stream(ImageIO.getReaderFormatNames()).anyMatch(format -> format.equals(FilenameUtils.getExtension(url)));
+    }
+
+    public static String extensionFrom(String mimeType) {
+        switch (mimeType.toLowerCase()) {
+            case "image/bmp":
+                return "bmp";
+            case "image/gif":
+                return "gif";
+            case "image/wbmp":
+                return "wbmp";
+            case "image/png":
+                return "png";
+            case "image/tif":
+            case "image/tiff":
+                return "tif";
+            default:
+                return "jpg";
+
+        }
     }
 }

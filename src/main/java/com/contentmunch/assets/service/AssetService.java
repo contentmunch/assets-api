@@ -31,7 +31,7 @@ public class AssetService {
         return assetAssembler.toModel(googleDriveService.get(id));
     }
 
-    public Optional<Asset> fromUrl(String url) {
+    public Optional<Asset> getFromUrl(String url) {
         var parameters = UriComponentsBuilder.fromUriString(url).build().getQueryParams();
         var id = parameters.getFirst("id");
         if (id != null)
