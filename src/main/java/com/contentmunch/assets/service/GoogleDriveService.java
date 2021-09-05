@@ -21,12 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
@@ -221,25 +217,13 @@ public class GoogleDriveService {
         }
     }
 
-    public DriveAsset create(String folderId, String link, String name, Optional<String> description) {
+    public DriveAsset create(String folderId, String url, String imageType, String name, Optional<String> description) {
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
             description.ifPresent(fileMetadata::setDescription);
             fileMetadata.setParents(List.of(folderId));
-
-            URL url = new URL(link.replaceAll(" ", "%20"));
-            var imageFile = Files.createTempFile("image", null);
-            var stream = url.openStream();
-            Files.copy(stream, imageFile, StandardCopyOption.REPLACE_EXISTING);
-
-            var image = ImageIO.read(imageFile.toFile());
-            String contentType = Files.probeContentType(imageFile);
-
-            var urlFile = new java.io.File("downloaded");
-            ImageIO.write(image, contentType, urlFile);
-
-            FileContent mediaContent = new FileContent(contentType, urlFile);
+            FileContent mediaContent = new FileContent(imageType, from(url, imageType));
 
             File file = drive.files().create(fileMetadata, mediaContent)
                     .setFields(IMAGE_FIELDS)
@@ -251,8 +235,7 @@ public class GoogleDriveService {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
         } finally {
-            var file = new java.io.File("downloaded");
-            file.delete();
+            deleteUrlFile();
         }
     }
 
