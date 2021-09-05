@@ -239,6 +239,21 @@ public class GoogleDriveService {
         }
     }
 
+    public DriveAsset createFrom(String fileId, String folderId, String name) {
+        try {
+            File fileMetadata = new File();
+            fileMetadata.setName(name);
+            fileMetadata.setParents(List.of(folderId));
+            var file = drive.files().copy(fileId, fileMetadata).setFields(IMAGE_FIELDS)
+                    .setSupportsAllDrives(true)
+                    .execute();
+            return DriveAsset.from(file);
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
     public DriveAsset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {
         try {
             File fileMetadata = new File();
