@@ -35,9 +35,9 @@ public class AssetService {
         return assetAssembler.toModel(googleDriveService.create(folderId, multipartFile, name, description));
     }
 
-    public Asset create(String folderId, String url, String imageType, String name, Optional<String> description) {
+    public Asset create(String folderId, String url, String name, Optional<String> description) {
 
-        return assetAssembler.toModel(googleDriveService.create(folderId, url, imageType, name, description));
+        return assetAssembler.toModel(googleDriveService.create(folderId, url, name, description));
     }
 
     public Asset update(String id, Optional<MultipartFile> multipartFile, Optional<String> name, Optional<String> description) {
