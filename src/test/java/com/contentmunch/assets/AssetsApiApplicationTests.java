@@ -8,7 +8,9 @@ class AssetsApiApplicationTests {
 
     @Test
     void contextLoads() {
-
+        var folderId = "1234556";
+        var name = "asik";
+        System.out.println("'" + folderId + "' in parents and name='" + name + "'");
     }
 
 }

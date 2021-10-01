@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +67,7 @@ public class GoogleDriveService {
     public Optional<DriveAsset> get(String folderId, String name) {
         try {
             Drive.Files.List list = drive.files().list()
-                    .setQ(MessageFormat.format("'{0}' in parents and name='{1}'", folderId, name))
+                    .setQ("'" + folderId + "' in parents and name='" + name + "'")
                     .setPageSize(1)
                     .setFields(" files(" + IMAGE_FIELDS + ")");
             FileList result = list.execute();
