@@ -1,6 +1,7 @@
 package com.contentmunch.assets.controller;
 
 import com.contentmunch.assets.data.Asset;
+import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.service.AssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,11 @@ public class AssetController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Asset> get(@PathVariable String id) {
-        return ResponseEntity.ok(assetService.get(id));
+        var asset = assetService.get(id);
+        if (asset.isPresent())
+            return ResponseEntity.ok(asset.get());
+        else
+            throw new AssetNotFoundException("Asset with assetId: " + id + " not found/ or is not an image");
     }
 
 }

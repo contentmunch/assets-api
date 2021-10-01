@@ -27,15 +27,16 @@ public class AssetService {
 
     private final AssetFolderAssembler assetFolderAssembler;
 
-    public Asset get(String id) {
-        return assetAssembler.toModel(googleDriveService.get(id));
+    public Optional<Asset> get(String id) {
+        var driveAsset = googleDriveService.get(id);
+        return driveAsset.map(assetAssembler::toModel);
     }
 
     public Optional<Asset> getFromUrl(String url) {
         var parameters = UriComponentsBuilder.fromUriString(url).build().getQueryParams();
         var id = parameters.getFirst("id");
         if (id != null)
-            return Optional.of(get(id));
+            return get(id);
         else
             return Optional.empty();
     }

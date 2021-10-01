@@ -5,7 +5,6 @@ import com.contentmunch.assets.data.drive.DriveAsset;
 import com.contentmunch.assets.data.drive.DriveAssets;
 import com.contentmunch.assets.data.drive.DriveFolder;
 import com.contentmunch.assets.exception.AssetException;
-import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.exception.AssetUnauthorizedException;
 import com.contentmunch.assets.utils.LocalFileUtils;
 import com.google.api.client.auth.oauth2.BearerToken;
@@ -24,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +65,29 @@ public class GoogleDriveService {
         }
     }
 
+    public Optional<DriveAsset> get(String folderId, String name) {
+        try {
+            Drive.Files.List list = drive.files().list()
+                    .setQ(MessageFormat.format("'{0}' in parents and name='{1}'", folderId, name))
+                    .setPageSize(1)
+                    .setFields(" files(" + IMAGE_FIELDS + ")");
+            FileList result = list.execute();
+            if (result.isEmpty())
+                return Optional.empty();
+
+            var driveAssets = DriveAssets
+                    .builder()
+                    .driveAssets(result.getFiles().stream().filter(file -> file.getMimeType().contains("image")).map(file -> DriveAsset.from(file, folderId))
+                            .collect(Collectors.toList()))
+                    .nextPageToken(result.getNextPageToken())
+                    .build();
+            return Optional.of(driveAssets.getDriveAssets().get(0));
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
     public DriveAssets list(String folderId, int pageSize, Optional<String> pageToken) {
 
         try {
@@ -90,14 +113,14 @@ public class GoogleDriveService {
         }
     }
 
-    public DriveAsset get(String assetId) {
+    public Optional<DriveAsset> get(String assetId) {
         try {
             File file = drive.files().get(assetId).setFields(IMAGE_FIELDS).execute();
             log.debug("Getting drive asset for assetId: {}", assetId);
             if (file.getMimeType().contains("image"))
-                return DriveAsset.from(file);
+                return Optional.of(DriveAsset.from(file));
             else
-                throw new AssetNotFoundException("Asset with assetId: " + assetId + " not found/ or is not an image");
+                return Optional.empty();
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
@@ -218,6 +241,12 @@ public class GoogleDriveService {
     }
 
     public DriveAsset create(String folderId, String url, String imageType, String name, Optional<String> description) {
+        var driveAsset = get(folderId, name);
+        if (driveAsset.isPresent()) {
+            log.debug("File {}  already exists!", name);
+            return driveAsset.get();
+        }
+
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
@@ -240,6 +269,11 @@ public class GoogleDriveService {
     }
 
     public DriveAsset createFrom(String fileId, String folderId, String name) {
+        var driveAsset = get(folderId, name);
+        if (driveAsset.isPresent()) {
+            log.debug("File {}  already exists!", name);
+            return driveAsset.get();
+        }
         try {
             File fileMetadata = new File();
             fileMetadata.setName(name);
@@ -256,6 +290,12 @@ public class GoogleDriveService {
 
     public DriveAsset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {
         try {
+            var driveAsset = get(folderId, name);
+            if (driveAsset.isPresent()) {
+                log.debug("File {}  already exists!", name);
+                return driveAsset.get();
+            }
+
             File fileMetadata = new File();
             fileMetadata.setName(name);
             fileMetadata.setDescription(description.orElseGet(() -> stripExtension(multipartFile.getOriginalFilename())));
