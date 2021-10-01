@@ -258,6 +258,7 @@ public class GoogleDriveService {
                     .setFields(IMAGE_FIELDS)
                     .setSupportsAllDrives(true)
                     .execute();
+            log.debug("File {} created in folder {}", name, folderId);
             return DriveAsset.from(file);
 
         } catch (IOException e) {
@@ -281,6 +282,7 @@ public class GoogleDriveService {
             var file = drive.files().copy(fileId, fileMetadata).setFields(IMAGE_FIELDS)
                     .setSupportsAllDrives(true)
                     .execute();
+            log.debug("File {} created in folder {}", name, folderId);
             return DriveAsset.from(file);
         } catch (IOException e) {
             log.error("IO Exception", e);
@@ -306,6 +308,7 @@ public class GoogleDriveService {
                     .setFields(IMAGE_FIELDS)
                     .setSupportsAllDrives(true)
                     .execute();
+            log.debug("File {} created in folder {}", name, folderId);
             return DriveAsset.from(file, folderId);
         } catch (IOException e) {
             log.error("IO Exception", e);
