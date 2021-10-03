@@ -21,7 +21,8 @@ public class DriveAsset {
     private String originalAsset;
 
     public static DriveAsset from(File file, String folderId) {
-        String largeAsset = file.getThumbnailLink().split("=")[0];
+        var thumbnailLinkContent = file.getThumbnailLink().split("=");
+        String largeAsset = thumbnailLinkContent != null && thumbnailLinkContent.length > 0 ? thumbnailLinkContent[0] : "undefined";
         return DriveAsset.builder().id(file.getId())
                 .name(file.getName())
                 .description(file.getDescription())
