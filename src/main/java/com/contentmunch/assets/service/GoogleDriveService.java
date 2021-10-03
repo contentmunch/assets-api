@@ -80,6 +80,9 @@ public class GoogleDriveService {
                             .collect(Collectors.toList()))
                     .nextPageToken(result.getNextPageToken())
                     .build();
+            if (driveAssets.getDriveAssets() == null || driveAssets.getDriveAssets().isEmpty())
+                return Optional.empty();
+
             return Optional.of(driveAssets.getDriveAssets().get(0));
         } catch (IOException e) {
             log.error("IO Exception", e);
