@@ -71,7 +71,7 @@ public class GoogleDriveService {
                     .setPageSize(1)
                     .setFields(" files(" + IMAGE_FIELDS + ")");
             FileList result = list.execute();
-            if (result.isEmpty())
+            if (result == null || result.isEmpty())
                 return Optional.empty();
 
             var driveAssets = DriveAssets
