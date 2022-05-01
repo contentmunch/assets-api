@@ -4,6 +4,11 @@ import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.service.AssetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +28,23 @@ public class AssetController {
             return ResponseEntity.ok(asset.get());
         else
             throw new AssetNotFoundException("Asset with assetId: " + id + " not found/ or is not an image");
+    }
+
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<Resource> getFile(@PathVariable String fileId) {
+
+        ByteArrayResource resource = new ByteArrayResource(assetService.getFile(fileId));
+
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(resource.contentLength())
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename(fileId)
+                                .build().toString())
+                .body(resource);
+
     }
 
 }

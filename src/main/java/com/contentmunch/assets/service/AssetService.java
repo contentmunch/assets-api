@@ -88,4 +88,7 @@ public class AssetService {
         return model;
     }
 
+    public byte[] getFile(String fileId) {
+        return googleDriveService.getFile(fileId);
+    }
 }
