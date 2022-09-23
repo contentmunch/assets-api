@@ -4,6 +4,8 @@ import com.contentmunch.assets.data.Asset;
 import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.service.AssetService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -12,10 +14,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.contentmunch.assets.configuration.AssetCachingConfiguration.ASSETS_CACHE;
+
 @RestController
 @CrossOrigin
 @RequestMapping(value = "/api/asset", produces = "application/json")
 @RequiredArgsConstructor
+@Slf4j
 public class AssetController {
 
     private final AssetService assetService;
@@ -31,8 +36,10 @@ public class AssetController {
     }
 
     @GetMapping("/download/{fileId}")
+    @Cacheable(ASSETS_CACHE)
     public ResponseEntity<Resource> getFile(@PathVariable String fileId) {
 
+        log.debug("getting file {}", fileId);
         ByteArrayResource resource = new ByteArrayResource(assetService.getFile(fileId));
 
         return ResponseEntity

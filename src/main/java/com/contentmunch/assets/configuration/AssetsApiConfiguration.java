@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @ComponentScan(basePackageClasses = {AssetController.class, AssetsController.class,
-        AssetsApiExceptionAdvice.class, AssetFolderAssembler.class,
-        AssetAssembler.class, AssetService.class, GoogleDriveService.class, AssetDriveConfig.class})
+        AssetsApiExceptionAdvice.class, AssetFolderAssembler.class, AssetAssembler.class,
+        AssetService.class, GoogleDriveService.class, AssetDriveConfig.class, AssetCachingConfiguration.class})
 @Configuration
 @PropertySource(value = "classpath:assets-api-application.yml", factory = YamlPropertySourceFactory.class)
 public class AssetsApiConfiguration {
