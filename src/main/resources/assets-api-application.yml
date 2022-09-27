@@ -1,10 +1,16 @@
 spring:
   application:
     name: assets-api
+  cache:
+    cache-names: assets
+    caffeine:
+      spec: maximumSize=${ASSETS_CACHE_SIZE:50}
+
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+
 google:
   drive:
     applicationName: ${GOOGLE_API_APPLICATION_NAME:Renaissance-rentals}

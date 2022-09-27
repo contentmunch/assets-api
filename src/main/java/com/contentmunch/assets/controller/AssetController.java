@@ -16,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import static com.contentmunch.assets.configuration.AssetCachingConfiguration.ASSETS_CACHE;
-
 @RestController
 @CrossOrigin
 @RequestMapping(value = "/api/asset", produces = "application/json")
@@ -44,7 +42,7 @@ public class AssetController {
     }
 
     @GetMapping("/download/{fileId}")
-    @Cacheable(ASSETS_CACHE)
+    @Cacheable("assets")
     public ResponseEntity<Resource> getFile(@PathVariable String fileId) {
 
         log.debug("getting file {}", fileId);
