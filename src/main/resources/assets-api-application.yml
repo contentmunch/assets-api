@@ -4,7 +4,7 @@ spring:
   cache:
     cache-names: assets
     caffeine:
-      spec: maximumSize=${ASSETS_CACHE_SIZE:50}
+      spec: maximumSize=${ASSETS_CACHE_SIZE:50},expireAfterAccess=${ASSETS_CACHE_EXPIRES_IN_SECONDS:600}s
 
   servlet:
     multipart:
