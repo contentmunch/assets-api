@@ -39,7 +39,7 @@ public class AssetController {
 
     @GetMapping("/download/{propertyId}/{fileId}")
     public ResponseEntity<Resource> getFileFromDomain(@PathVariable String propertyId, @PathVariable String fileId) {
-        var assetUrl = propertyService.propertyIdToDomain(propertyId) + "download/" + fileId;
+        var assetUrl = propertyService.propertyIdToDomain(propertyId) + "api/asset/download/" + fileId;
         return new RestTemplate().getForEntity(assetUrl, Resource.class);
     }
 
