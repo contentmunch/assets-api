@@ -19,7 +19,7 @@ public class AssetCachingConfiguration {
     @Bean
     public Caffeine caffeineConfig() {
         var caffeine = Caffeine.newBuilder().initialCapacity(100);
-        caffeine.maximumSize(500);
+        caffeine.maximumSize(300);
         return caffeine;
     }
 
