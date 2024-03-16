@@ -5,17 +5,15 @@
     <parent>
         <groupId>com.contentmunch</groupId>
         <artifactId>contentmunch-parent</artifactId>
-        <version>3.2.3.RELEASE</version>
+        <version>3.2.6.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.contentmunch</groupId>
     <artifactId>assets-api</artifactId>
-    <version>3.0.0.RELEASE</version>
+    <version>3.0.1.RELEASE</version>
     <name>assets-api</name>
     <description>Assets API</description>
-
     <dependencies>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-hateoas</artifactId>
@@ -44,23 +42,4 @@
             <version>2.15.1</version>
         </dependency>
     </dependencies>
-
-    <!--        Commenting out the maven plugin so that the package is distributable-->
-    <!--    <build>-->
-    <!--        <plugins>-->
-    <!--            <plugin>-->
-    <!--                <groupId>org.springframework.boot</groupId>-->
-    <!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
-    <!--                <configuration>-->
-    <!--                    <excludes>-->
-    <!--                        <exclude>-->
-    <!--                            <groupId>org.projectlombok</groupId>-->
-    <!--                            <artifactId>lombok</artifactId>-->
-    <!--                        </exclude>-->
-    <!--                    </excludes>-->
-    <!--                </configuration>-->
-    <!--            </plugin>-->
-    <!--        </plugins>-->
-    <!--    </build>-->
-
 </project>
