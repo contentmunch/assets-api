@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 import static com.contentmunch.assets.utils.LocalFileUtils.*;
 import static com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.newTrustedTransport;
-import static com.google.api.client.json.jackson2.JacksonFactory.getDefaultInstance;
+import static com.google.api.client.json.gson.GsonFactory.getDefaultInstance;
 
 @Service
 @Slf4j
@@ -45,7 +45,7 @@ public class GoogleDriveService {
         try {
             this.drive = new Drive.Builder(newTrustedTransport(), getDefaultInstance(),
                     new Credential.Builder(BearerToken.authorizationHeaderAccessMethod()).setTransport(
-                            newTrustedTransport())
+                                    newTrustedTransport())
                             .setJsonFactory(getDefaultInstance())
                             .setTokenServerUrl(
                                     new GenericUrl(assetDriveConfig.getTokenServer()))

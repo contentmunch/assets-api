@@ -1,6 +1,6 @@
 package com.contentmunch.assets.data.assembler;
 
-import com.contentmunch.assets.controller.AssetFolderController;
+import com.contentmunch.assets.controller.AssetsController;
 import com.contentmunch.assets.data.AssetFolder;
 import com.contentmunch.assets.data.drive.DriveFolder;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AssetFolderAssembler extends RepresentationModelAssemblerSupport<DriveFolder, AssetFolder> {
     public AssetFolderAssembler() {
-        super(AssetFolderController.class, AssetFolder.class);
+        super(AssetsController.class, AssetFolder.class);
     }
 
     @Override
