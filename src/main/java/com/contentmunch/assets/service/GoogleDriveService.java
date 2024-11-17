@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 import static com.contentmunch.assets.utils.LocalFileUtils.*;
 import static com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.newTrustedTransport;
-import static com.google.api.client.json.gson.GsonFactory.getDefaultInstance;
+import static com.google.api.client.json.jackson2.JacksonFactory.getDefaultInstance;
 
 @Service
 @Slf4j
