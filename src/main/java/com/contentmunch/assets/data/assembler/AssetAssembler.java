@@ -23,7 +23,7 @@ public class AssetAssembler extends RepresentationModelAssemblerSupport<DriveAss
         asset.setMimeType(driveAsset.getMimeType());
         asset.setHeight(driveAsset.getHeight());
         asset.setWidth(driveAsset.getWidth());
-        asset.add(Link.of(driveAsset.getThumbnailAsset(), "thumbnailAsset"));
+        asset.add(Link.of(driveAsset.getThumbnailAsset() == null ? driveAsset.getOriginalAsset() : driveAsset.getThumbnailAsset(), "thumbnailAsset"));
         asset.add(Link.of(driveAsset.getSmallAsset(), "smallAsset"));
         asset.add(Link.of(driveAsset.getMediumAsset(), "mediumAsset"));
         asset.add(Link.of(driveAsset.getLargeAsset(), "largeAsset"));

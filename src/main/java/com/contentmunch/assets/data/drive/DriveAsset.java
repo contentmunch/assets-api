@@ -21,8 +21,14 @@ public class DriveAsset {
     private String originalAsset;
 
     public static DriveAsset from(File file, String folderId) {
-        var thumbnailLinkContent = file.getThumbnailLink().split("=");
-        String largeAsset = thumbnailLinkContent != null && thumbnailLinkContent.length > 0 ? thumbnailLinkContent[0] : "undefined";
+        String largeAsset = null;
+        if (file.getThumbnailLink() != null) {
+            var thumbnailLinkContent = file.getThumbnailLink().split("=");
+            if (thumbnailLinkContent.length > 0) {
+                largeAsset = thumbnailLinkContent[0];
+            }
+        }
+
         return DriveAsset.builder().id(file.getId())
                 .name(file.getName())
                 .description(file.getDescription())
@@ -31,26 +37,14 @@ public class DriveAsset {
                 .height(file.getImageMediaMetadata().getHeight())
                 .width(file.getImageMediaMetadata().getWidth())
                 .thumbnailAsset(file.getThumbnailLink())
-                .smallAsset(largeAsset + "=s600")
-                .mediumAsset(largeAsset + "=s1200")
-                .largeAsset(largeAsset)
+                .smallAsset(largeAsset != null ? largeAsset + "=s600" : file.getWebContentLink())
+                .mediumAsset(largeAsset != null ? largeAsset + "=s1200" : file.getWebContentLink())
+                .largeAsset(largeAsset != null ? largeAsset : file.getWebContentLink())
                 .originalAsset(file.getWebContentLink()).build();
     }
 
     public static DriveAsset from(File file) {
-        String largeAsset = file.getThumbnailLink().split("=")[0];
-        return DriveAsset.builder().id(file.getId())
-                .name(file.getName())
-                .description(file.getDescription())
-                .folderId(!file.getParents().isEmpty() ? file.getParents().get(0) : "")
-                .mimeType(file.getMimeType())
-                .height(file.getImageMediaMetadata().getHeight())
-                .width(file.getImageMediaMetadata().getWidth())
-                .thumbnailAsset(file.getThumbnailLink())
-                .smallAsset(largeAsset + "=s600")
-                .mediumAsset(largeAsset + "=s1200")
-                .largeAsset(largeAsset)
-                .originalAsset(file.getWebContentLink()).build();
+        return from(file, !file.getParents().isEmpty() ? file.getParents().get(0) : "");
     }
 
 }
