@@ -6,7 +6,7 @@ import com.contentmunch.assets.data.assembler.AssetAssembler;
 import com.contentmunch.assets.data.assembler.AssetFolderAssembler;
 import com.contentmunch.assets.exception.AssetsApiExceptionAdvice;
 import com.contentmunch.assets.service.AssetService;
-import com.contentmunch.assets.service.GoogleDriveService;
+import com.contentmunch.assets.external.GoogleDriveService;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

@@ -6,6 +6,7 @@ import com.contentmunch.assets.data.AssetFolder;
 import com.contentmunch.assets.data.assembler.AssetAssembler;
 import com.contentmunch.assets.data.assembler.AssetFolderAssembler;
 import com.contentmunch.assets.data.drive.DriveAssets;
+import com.contentmunch.assets.external.GoogleDriveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Service;
@@ -69,7 +70,7 @@ public class AssetService {
 
     public Optional<AssetFolder> getFolder(String folderId, String name) {
         var driveFolder = googleDriveService.getDriveByName(folderId, name);
-        return driveFolder.isEmpty() ? Optional.empty() : Optional.of(assetFolderAssembler.toModel(driveFolder.get()));
+        return driveFolder.map(assetFolderAssembler::toModel);
     }
 
     public void delete(String id) {

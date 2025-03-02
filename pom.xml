@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <artifactId>assets-api</artifactId>
-    <version>5.0.4.RELEASE</version>
+    <version>5.1.0.RELEASE</version>
     <name>assets-api</name>
     <description>Assets API</description>
     <dependencies>

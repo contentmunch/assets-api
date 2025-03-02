@@ -1,4 +1,4 @@
-package com.contentmunch.assets.service;
+package com.contentmunch.assets.external;
 
 import com.contentmunch.assets.configuration.AssetDriveConfig;
 import com.contentmunch.assets.data.drive.DriveAsset;
@@ -26,9 +26,11 @@ import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import static com.contentmunch.assets.utils.LocalFileUtils.*;
+import static com.contentmunch.assets.utils.LocalFileUtils.from;
+import static com.contentmunch.assets.utils.LocalFileUtils.stripExtension;
 import static com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.newTrustedTransport;
 import static com.google.api.client.json.gson.GsonFactory.getDefaultInstance;
 
@@ -38,9 +40,9 @@ public class GoogleDriveService {
 
     private static final String IMAGE_FIELDS = "id, name, description, mimeType, parents, imageMediaMetadata, thumbnailLink, webContentLink";
     private final Drive drive;
-
     public GoogleDriveService(AssetDriveConfig assetDriveConfig) {
         TokenResponse response = new TokenResponse();
+
         response.setRefreshToken(assetDriveConfig.getRefreshToken());
         try {
             this.drive = new Drive.Builder(newTrustedTransport(), getDefaultInstance(),
@@ -63,7 +65,6 @@ public class GoogleDriveService {
             throw new AssetException(e.getMessage());
         }
     }
-
     public Optional<DriveAsset> get(String folderId, String name) {
         try {
             Drive.Files.List list = drive.files().list()
@@ -219,10 +220,9 @@ public class GoogleDriveService {
             File fileMetadata = new File();
             name.ifPresent(fileMetadata::setName);
             description.ifPresent(fileMetadata::setDescription);
+
             if (multipartFile.isPresent()) {
-                fileMetadata.setDescription(
-                        description.orElseGet(() -> stripExtension(multipartFile.get().getOriginalFilename()))
-                );
+                fileMetadata.setDescription(description.orElseGet(() -> stripExtension(multipartFile.get().getOriginalFilename())));
                 FileContent mediaContent = new FileContent(multipartFile.get().getContentType(), from(multipartFile.get()));
                 return DriveAsset.from(drive.files().update(id, fileMetadata, mediaContent)
                         .setFields(IMAGE_FIELDS)
@@ -243,80 +243,63 @@ public class GoogleDriveService {
     }
 
     public DriveAsset create(String folderId, String url, String imageType, String name, Optional<String> description) {
-        var driveAsset = get(folderId, name);
-        if (driveAsset.isPresent()) {
-            log.debug("File {}  already exists!", name);
-            return driveAsset.get();
-        }
-
-        try {
-            File fileMetadata = new File();
-            fileMetadata.setName(name);
-            description.ifPresent(fileMetadata::setDescription);
-            fileMetadata.setParents(List.of(folderId));
-            FileContent mediaContent = new FileContent(imageType, from(url, imageType));
-
-            File file = drive.files().create(fileMetadata, mediaContent)
-                    .setFields(IMAGE_FIELDS)
-                    .setSupportsAllDrives(true)
-                    .execute();
-            log.debug("File {} created in folder {}", name, folderId);
-            return DriveAsset.from(file);
-
-        } catch (IOException e) {
-            log.error("IO Exception", e);
-            throw new AssetException(e.getMessage());
-        } finally {
-            deleteUrlFile();
-        }
+        return get(folderId, name).orElseGet(() ->
+                handleFileOperation(() -> {
+                    File fileMetadata = createFileMetadata(name, description, folderId);
+                    FileContent mediaContent = new FileContent(imageType, from(url, imageType));
+                    return drive.files().create(fileMetadata, mediaContent)
+                            .setFields(IMAGE_FIELDS)
+                            .setSupportsAllDrives(true)
+                            .execute();
+                }, name, folderId)
+        );
     }
 
     public DriveAsset createFrom(String fileId, String folderId, String name) {
-        var driveAsset = get(folderId, name);
-        if (driveAsset.isPresent()) {
-            log.debug("File {}  already exists!", name);
-            return driveAsset.get();
-        }
-        try {
-            File fileMetadata = new File();
-            fileMetadata.setName(name);
-            fileMetadata.setParents(List.of(folderId));
-            var file = drive.files().copy(fileId, fileMetadata).setFields(IMAGE_FIELDS)
-                    .setSupportsAllDrives(true)
-                    .execute();
-            log.debug("File {} created in folder {}", name, folderId);
-            return DriveAsset.from(file);
-        } catch (IOException e) {
-            log.error("IO Exception", e);
-            throw new AssetException(e.getMessage());
-        }
+        return get(folderId, name).orElseGet(() ->
+                handleFileOperation(() -> {
+                    File fileMetadata = createFileMetadata(name, Optional.empty(), folderId);
+                    return drive.files().copy(fileId, fileMetadata)
+                            .setFields(IMAGE_FIELDS)
+                            .setSupportsAllDrives(true)
+                            .execute();
+                }, name, folderId)
+        );
     }
 
     public DriveAsset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {
+        return get(folderId, name).orElseGet(() ->
+                handleFileOperation(() -> {
+                    File fileMetadata = createFileMetadata(name, description.or(() -> Optional.of(stripExtension(multipartFile.getOriginalFilename()))), folderId);
+                    FileContent mediaContent = new FileContent(multipartFile.getContentType(), from(multipartFile));
+                    return drive.files().create(fileMetadata, mediaContent)
+                            .setFields(IMAGE_FIELDS)
+                            .setSupportsAllDrives(true)
+                            .execute();
+                }, name, folderId)
+        );
+    }
+
+
+    private DriveAsset handleFileOperation(Callable<File> fileOperation, String name, String folderId) {
         try {
-            var driveAsset = get(folderId, name);
-            if (driveAsset.isPresent()) {
-                log.debug("File {}  already exists!", name);
-                return driveAsset.get();
-            }
-
-            File fileMetadata = new File();
-            fileMetadata.setName(name);
-            fileMetadata.setDescription(description.orElseGet(() -> stripExtension(multipartFile.getOriginalFilename())));
-            fileMetadata.setParents(List.of(folderId));
-            FileContent mediaContent = new FileContent(multipartFile.getContentType(), from(multipartFile));
-
-            File file = drive.files().create(fileMetadata, mediaContent)
-                    .setFields(IMAGE_FIELDS)
-                    .setSupportsAllDrives(true)
-                    .execute();
+            File file = fileOperation.call();
             log.debug("File {} created in folder {}", name, folderId);
             return DriveAsset.from(file, folderId);
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
-        } finally {
-            deleteTempFile(multipartFile);
+        } catch (Exception e) {
+            log.error("Unexpected Exception", e);
+            throw new AssetException(e.getMessage());
         }
+    }
+
+    private File createFileMetadata(String name, Optional<String> description, String folderId) {
+        File fileMetadata = new File();
+        fileMetadata.setName(name);
+        description.ifPresent(fileMetadata::setDescription);
+        fileMetadata.setParents(List.of(folderId));
+        return fileMetadata;
     }
 }
