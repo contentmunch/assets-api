@@ -5,6 +5,7 @@ import com.contentmunch.assets.data.video.VideoMetadata;
 import com.contentmunch.assets.data.video.VideoUploadMetadata;
 import com.contentmunch.assets.exception.AssetException;
 import com.contentmunch.assets.exception.AssetUnauthorizedException;
+import com.contentmunch.assets.exception.VideoUploadException;
 import com.contentmunch.assets.service.VideoService;
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
@@ -13,12 +14,16 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.services.drive.model.File;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.newTrustedTransport;
 import static com.google.api.client.json.gson.GsonFactory.getDefaultInstance;
@@ -78,7 +83,7 @@ public class GoogleDriveVideoService implements VideoService {
             var uploadId = extractUploadId(resumableUploadUrl);
 
             return uploadId
-                    .map(VideoUploadMetadata::new)
+                    .map(id -> new VideoUploadMetadata(uploadId.get(), resumableUploadUrl))
                     .orElseThrow(() -> new AssetException("Failure to initiate upload: No upload Id present"));
         } catch (IOException | RuntimeException e) {
             log.error("Error initiating video upload", e);
@@ -87,26 +92,61 @@ public class GoogleDriveVideoService implements VideoService {
     }
 
     @Override
+    @Retryable(
+            retryFor = {VideoUploadException.class}, // Retry for specific exceptions
+            maxAttempts = 5, // Max number of retries
+            backoff = @Backoff(delay = 1000, multiplier = 2) // Exponential backoff (1s, 2s, 4s, etc.)
+    )
     public Optional<VideoMetadata> uploadVideo(String uploadId, byte[] chunk, long startByte, long endByte, long totalSize, boolean isLastChunk) {
         try {
             String uploadUrl = String.format(UPLOAD_URL_FORMAT, "?upload_id=" + uploadId);
             HttpRequest request = requestFactory.buildPutRequest(new GenericUrl(uploadUrl),
                     new ByteArrayContent("application/octet-stream", chunk));
 
-            request.getHeaders().set("Content-Range", String.format("bytes %d-%d/%d", startByte, endByte, totalSize));
+            // Set Content-Range header
+            String contentRange = String.format("bytes %d-%d/%d", startByte, endByte - 1, totalSize);
+            request.getHeaders().set("Content-Range", contentRange);
+            log.info("Uploading chunk {}-{} of {}", startByte, endByte - 1, totalSize);
 
             HttpResponse response = request.execute();
-            log.info("Uploaded chunk: {}-{} of {}", startByte, endByte, totalSize);
 
+            // Handle 308 Resume Incomplete error
+            if (response.getStatusCode() == 308) {
+                log.info("Chunk {}-{} uploaded successfully, server expects more chunks.", startByte, endByte - 1);
+                return Optional.empty(); // Continue with next chunk
+            }
+
+            // Handle successful upload (last chunk)
             if (isLastChunk) {
                 File uploadedFile = response.parseAs(File.class);
+                log.info("Upload complete for file: {}", uploadedFile.getName());
                 return Optional.of(buildVideoMetadata(uploadedFile));
             }
 
             return Optional.empty();
+        } catch (HttpResponseException e) {
+            String message = String.format("Error uploading video: %s for chunk %d-%d", e.getMessage(), startByte, endByte - 1);
+
+            return switch (e.getStatusCode()) {
+                case 308 -> {
+                    // Handle 308 Resume Incomplete error separately
+                    log.info("Upload still in progress, continue with next chunk: {}-{}", startByte, endByte - 1);
+                    yield Optional.empty(); // Continue uploading the next chunk
+                }
+                case 500 -> {
+                    log.error("Received 500 Internal Server Error. Retrying chunk {}-{}", startByte, endByte - 1, e);
+                    throw new VideoUploadException(message); // Retry after 500 error
+                }
+                default -> {
+                    log.error(message, e);
+                    throw new AssetException(message); // For other HttpResponseException cases
+                }
+            };
         } catch (IOException | RuntimeException e) {
-            log.error("Error uploading video", e);
-            throw new AssetException("Error uploading video");
+            // Handle all other IO/RuntimeExceptions
+            String message = String.format("Unexpected error uploading video for chunk %d-%d", startByte, endByte - 1);
+            log.error(message, e);
+            throw new AssetException(message);
         }
     }
 
@@ -141,8 +181,12 @@ public class GoogleDriveVideoService implements VideoService {
     }
 
     private Optional<String> extractUploadId(String resumableUploadUrl) {
-        var uploadSplit = resumableUploadUrl.split("=");
-        return uploadSplit.length > 1 ? Optional.of(uploadSplit[1]) : Optional.empty();
+        Pattern pattern = Pattern.compile("upload_id=([^&]+)");
+        Matcher matcher = pattern.matcher(resumableUploadUrl);
+        if (matcher.find()) {
+            return Optional.of(matcher.group(1)); // Returns the value of upload_id
+        }
+        return Optional.empty(); // Return null if n
     }
 
     private String getAccessToken() throws IOException {

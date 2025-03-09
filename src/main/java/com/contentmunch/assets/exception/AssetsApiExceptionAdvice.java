@@ -56,4 +56,13 @@ public class AssetsApiExceptionAdvice {
                 .message(e.getMessage())
                 .build();
     }
+
+    @ExceptionHandler(VideoUploadException.class)
+    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public AssetErrorMessage handleAssetException(VideoUploadException e) {
+        return AssetErrorMessage.builder()
+                .message(e.getMessage())
+                .build();
+    }
 }

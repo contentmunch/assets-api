@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.retry.annotation.EnableRetry;
 
 @ComponentScan(basePackageClasses = {AssetController.class, AssetsController.class,
         AssetsApiExceptionAdvice.class, AssetFolderAssembler.class, AssetAssembler.class,
@@ -18,5 +19,6 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @PropertySource(value = "classpath:assets-api-application.yml", factory = YamlPropertySourceFactory.class)
 @EnableCaching
+@EnableRetry
 public class AssetsApiConfiguration {
 }

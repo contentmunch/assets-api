@@ -10,9 +10,11 @@ import com.contentmunch.assets.utils.LocalFileUtils;
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.api.client.http.BasicAuthentication;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
@@ -20,8 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
@@ -279,6 +280,7 @@ public class GoogleDriveService {
                 }, name, folderId)
         );
     }
+
 
 
     private DriveAsset handleFileOperation(Callable<File> fileOperation, String name, String folderId) {
