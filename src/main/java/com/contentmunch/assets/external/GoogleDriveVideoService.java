@@ -92,6 +92,7 @@ public class GoogleDriveVideoService implements VideoService {
             Drive.Files.List list = drive.files().list()
                     .setQ("'" + folderId + "' in parents")
                     .setPageSize(Optional.ofNullable(pageSize).orElse(DEFAULT_PAGE_SIZE))
+                    .setOrderBy("modifiedTime desc")
                     .setFields("nextPageToken, files(" + VIDEO_FIELDS + ")");
 
             if (pageToken != null) {
