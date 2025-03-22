@@ -16,5 +16,9 @@ public interface VideoService {
 
     Optional<VideoAsset> getMetadata(String id);
 
+    default VideoAssets findByFolderId(String folderId) {
+        return findByFolderId(folderId, 10, null);
+    }
+
     VideoAssets findByFolderId(String folderId, Integer pageSize, String pageToken);
 }
