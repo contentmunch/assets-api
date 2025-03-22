@@ -1,7 +1,9 @@
 package com.contentmunch.assets.external;
 
 import com.contentmunch.assets.configuration.AssetDriveConfig;
-import com.contentmunch.assets.data.video.VideoMetadata;
+import com.contentmunch.assets.data.drive.DriveAsset;
+import com.contentmunch.assets.data.video.VideoAsset;
+import com.contentmunch.assets.data.video.VideoAssets;
 import com.contentmunch.assets.data.video.VideoUploadMetadata;
 import com.contentmunch.assets.exception.AssetException;
 import com.contentmunch.assets.exception.AssetUnauthorizedException;
@@ -12,7 +14,9 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.http.*;
 import com.google.api.client.http.json.JsonHttpContent;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -24,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.google.api.client.googleapis.javanet.GoogleNetHttpTransport.newTrustedTransport;
 import static com.google.api.client.json.gson.GsonFactory.getDefaultInstance;
@@ -36,7 +41,10 @@ public class GoogleDriveVideoService implements VideoService {
     private final Credential credential;
     private final HttpRequestFactory requestFactory;
     private static final String UPLOAD_URL_FORMAT = "https://www.googleapis.com/upload/drive/v3/files%s";
+    private final Drive drive;
 
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final String VIDEO_FIELDS = "id, name, description, mimeType, parents, thumbnailLink, webContentLink";
 
     public GoogleDriveVideoService(AssetDriveConfig assetDriveConfig) {
         TokenResponse response = new TokenResponse();
@@ -52,9 +60,57 @@ public class GoogleDriveVideoService implements VideoService {
                     .setFromTokenResponse(response);
             this.requestFactory = credential.getTransport().createRequestFactory();
 
+            this.drive = new Drive.Builder(newTrustedTransport(), getDefaultInstance(),
+                    credential)
+                    .setApplicationName(assetDriveConfig.getApplicationName())
+                    .build();
+
         } catch (GeneralSecurityException e) {
             log.error("Security Exception", e);
             throw new AssetUnauthorizedException(e.getMessage());
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Optional<VideoAsset> getMetadata(String assetId) {
+        try {
+            File file = drive.files().get(assetId).setFields(VIDEO_FIELDS).execute();
+            log.debug("Getting drive asset for assetId: {}", assetId);
+            return Optional.of(buildVideoMetadata(file));
+        } catch (IOException | RuntimeException e) {
+            log.error("Error getting video for id {}", assetId, e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public VideoAssets findByFolderId(String folderId, Integer pageSize, String pageToken) {
+        try {
+            log.debug("Listing drive: {} with pageSize: {} and pageToken {}", folderId, pageSize, pageToken);
+            Drive.Files.List list = drive.files().list()
+                    .setQ("'" + folderId + "' in parents")
+                    .setPageSize(Optional.ofNullable(pageSize).orElse(DEFAULT_PAGE_SIZE))
+                    .setFields("nextPageToken, files(" + VIDEO_FIELDS + ")");
+
+            if(pageToken != null) {
+                list.setPageToken(pageToken);
+            }
+
+            FileList result = list.execute();
+
+
+            return VideoAssets
+                    .builder()
+                    .videoAssets(result.getFiles().stream()
+                            .filter(file -> file.getMimeType().contains("video"))
+                            .map(this::buildVideoMetadata)
+                            .collect(Collectors.toList()))
+                    .nextPageToken(result.getNextPageToken())
+                    .build();
+
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
@@ -97,7 +153,7 @@ public class GoogleDriveVideoService implements VideoService {
             maxAttempts = 5, // Max number of retries
             backoff = @Backoff(delay = 1000, multiplier = 2) // Exponential backoff (1s, 2s, 4s, etc.)
     )
-    public Optional<VideoMetadata> uploadVideo(String uploadId, byte[] chunk, long startByte, long endByte, long totalSize, boolean isLastChunk) {
+    public Optional<VideoAsset> uploadVideo(String uploadId, byte[] chunk, long startByte, long endByte, long totalSize, boolean isLastChunk) {
         try {
             String uploadUrl = String.format(UPLOAD_URL_FORMAT, "?upload_id=" + uploadId);
             HttpRequest request = requestFactory.buildPutRequest(new GenericUrl(uploadUrl),
@@ -150,25 +206,9 @@ public class GoogleDriveVideoService implements VideoService {
         }
     }
 
-    @Override
-    public Optional<VideoMetadata> getMetadata(String id) {
-        try {
-            String videoMetadataUrl = String.format(UPLOAD_URL_FORMAT, "/" + id + "?fields=id,name,description,parents,mimeType,webContentLink");
-            HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(videoMetadataUrl));
 
-            request.getHeaders().setAuthorization("Bearer " + getAccessToken());
-
-            HttpResponse response = request.execute();
-            File file = response.parseAs(File.class);
-            return Optional.of(buildVideoMetadata(file));
-        } catch (IOException | RuntimeException e) {
-            log.error("Error getting video for id {}", id, e);
-            return Optional.empty();
-        }
-    }
-
-    private VideoMetadata buildVideoMetadata(File file) {
-        return VideoMetadata.builder()
+    private VideoAsset buildVideoMetadata(File file) {
+        return VideoAsset.builder()
                 .id(file.getId())
                 .name(file.getName())
                 .description(file.getDescription())

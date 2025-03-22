@@ -1,6 +1,7 @@
 package com.contentmunch.assets.controller;
 
-import com.contentmunch.assets.data.video.VideoMetadata;
+import com.contentmunch.assets.data.video.VideoAsset;
+import com.contentmunch.assets.data.video.VideoAssets;
 import com.contentmunch.assets.exception.AssetNotFoundException;
 import com.contentmunch.assets.service.VideoService;
 import lombok.RequiredArgsConstructor;
@@ -10,19 +11,26 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin
-@RequestMapping(value = "/api/videos", produces = "application/json")
+@RequestMapping(value = "/api", produces = "application/json")
 @RequiredArgsConstructor
 @Slf4j
 public class VideoController {
     private final VideoService videoService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<VideoMetadata> get(@PathVariable String id) {
+    @GetMapping("/videos/{id}")
+    public ResponseEntity<VideoAsset> get(@PathVariable String id) {
         var video = videoService.getMetadata(id);
-        if (video.isPresent())
-            return ResponseEntity.ok(video.get());
-        else
-            throw new AssetNotFoundException("Video with Id: " + id + " not found");
+        if (video.isPresent()) return ResponseEntity.ok(video.get());
+        else throw new AssetNotFoundException("Video with Id: " + id + " not found");
+    }
+
+    @GetMapping("/{folderId}/videos")
+    public ResponseEntity<VideoAssets> getByFolderId(
+            @PathVariable String folderId,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) String nextPageToken) {
+
+        return ResponseEntity.ok(videoService.findByFolderId(folderId, pageSize, nextPageToken));
     }
 
 }
