@@ -4,7 +4,6 @@ import com.contentmunch.assets.data.video.VideoAsset;
 import com.contentmunch.assets.data.video.VideoAssets;
 import com.contentmunch.assets.data.video.VideoUploadMetadata;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface VideoService {
@@ -14,11 +13,13 @@ public interface VideoService {
     @Deprecated
     Optional<VideoAsset> uploadVideo(String uploadId, byte[] chunk, long startByte, long endByte, long totalSize, boolean isLastChunk);
 
-    Optional<VideoAsset> getMetadata(String id);
+    Optional<VideoAsset> getVideo(String id);
 
-    default VideoAssets findByFolderId(String folderId) {
-        return findByFolderId(folderId, 10, null);
+    default VideoAssets findVideosByFolderId(String folderId) {
+        return findVideosByFolderId(folderId, 10, null);
     }
 
-    VideoAssets findByFolderId(String folderId, Integer pageSize, String pageToken);
+    VideoAssets findVideosByFolderId(String folderId, Integer pageSize, String pageToken);
+
+    void deleteVideo(String id);
 }

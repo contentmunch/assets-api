@@ -19,7 +19,7 @@ public class VideoController {
 
     @GetMapping("/videos/{id}")
     public ResponseEntity<VideoAsset> get(@PathVariable String id) {
-        var video = videoService.getMetadata(id);
+        var video = videoService.getVideo(id);
         if (video.isPresent()) return ResponseEntity.ok(video.get());
         else throw new AssetNotFoundException("Video with Id: " + id + " not found");
     }
@@ -30,7 +30,7 @@ public class VideoController {
             @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false) String nextPageToken) {
 
-        return ResponseEntity.ok(videoService.findByFolderId(folderId, pageSize, nextPageToken));
+        return ResponseEntity.ok(videoService.findVideosByFolderId(folderId, pageSize, nextPageToken));
     }
 
 }

@@ -1,7 +1,6 @@
 package com.contentmunch.assets.external;
 
 import com.contentmunch.assets.configuration.AssetDriveConfig;
-import com.contentmunch.assets.data.drive.DriveAsset;
 import com.contentmunch.assets.data.video.VideoAsset;
 import com.contentmunch.assets.data.video.VideoAssets;
 import com.contentmunch.assets.data.video.VideoUploadMetadata;
@@ -75,7 +74,7 @@ public class GoogleDriveVideoService implements VideoService {
     }
 
     @Override
-    public Optional<VideoAsset> getMetadata(String assetId) {
+    public Optional<VideoAsset> getVideo(String assetId) {
         try {
             File file = drive.files().get(assetId).setFields(VIDEO_FIELDS).execute();
             log.debug("Getting drive asset for assetId: {}", assetId);
@@ -87,7 +86,7 @@ public class GoogleDriveVideoService implements VideoService {
     }
 
     @Override
-    public VideoAssets findByFolderId(String folderId, Integer pageSize, String pageToken) {
+    public VideoAssets findVideosByFolderId(String folderId, Integer pageSize, String pageToken) {
         try {
             log.debug("Listing drive: {} with pageSize: {} and pageToken {}", folderId, pageSize, pageToken);
             Drive.Files.List list = drive.files().list()
@@ -95,7 +94,7 @@ public class GoogleDriveVideoService implements VideoService {
                     .setPageSize(Optional.ofNullable(pageSize).orElse(DEFAULT_PAGE_SIZE))
                     .setFields("nextPageToken, files(" + VIDEO_FIELDS + ")");
 
-            if(pageToken != null) {
+            if (pageToken != null) {
                 list.setPageToken(pageToken);
             }
 
@@ -111,6 +110,16 @@ public class GoogleDriveVideoService implements VideoService {
                     .nextPageToken(result.getNextPageToken())
                     .build();
 
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteVideo(String id) {
+        try {
+            drive.files().delete(id).execute();
         } catch (IOException e) {
             log.error("IO Exception", e);
             throw new AssetException(e.getMessage());
