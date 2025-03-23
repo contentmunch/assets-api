@@ -34,7 +34,7 @@ public class VideoController {
         return ResponseEntity.ok(videoService.findVideosByFolderId(folderId, pageSize, nextPageToken));
     }
 
-    @GetMapping("/{folderId}/videos")
+    @GetMapping("/{folderId}/video")
     public ResponseEntity<VideoAsset> getByFolderIdAndName(
             @PathVariable String folderId,
             @RequestParam String name) {
