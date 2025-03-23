@@ -1,6 +1,5 @@
 package com.contentmunch.assets;
 
-import com.contentmunch.assets.external.GoogleDriveVideoService;
 import com.contentmunch.assets.service.VideoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,7 @@ class AssetsApiApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println(videoService.getVideo("1DM73kdlkubIxUCtHVqk3NGHJjjwkQ5e-"));
+        System.out.println(videoService.findVideoBy("18kPGSakofB6DiKlzqI1SBSWXlg4iYtKQ", "cover-video"));
     }
 
 }
