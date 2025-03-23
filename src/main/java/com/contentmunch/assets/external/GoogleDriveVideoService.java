@@ -169,10 +169,10 @@ public class GoogleDriveVideoService implements VideoService {
             fileMetadata.setMimeType(mimeType);
             fileMetadata.setDescription(description);
 
-            var isFilePresent = findVideoBy(folderId, name).isPresent();
+            var video = findVideoBy(folderId, name);
 
-            HttpRequest request = isFilePresent ?
-                    requestFactory.buildPutRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "?uploadType=resumable")),
+            HttpRequest request = video.isPresent() ?
+                    requestFactory.buildPutRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "/" + video.get().id() + "?uploadType=resumable")),
                             new JsonHttpContent(getDefaultInstance(), fileMetadata))
                     :
                     requestFactory.buildPostRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "?uploadType=resumable")),
