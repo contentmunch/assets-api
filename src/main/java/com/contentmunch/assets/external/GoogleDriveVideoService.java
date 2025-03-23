@@ -172,7 +172,7 @@ public class GoogleDriveVideoService implements VideoService {
             var video = findVideoBy(folderId, name);
 
             HttpRequest request = video.isPresent() ?
-                    requestFactory.buildPutRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "/" + video.get().id() + "?uploadType=resumable")),
+                    requestFactory.buildPatchRequest(new GenericUrl(String.format("https://www.googleapis.com/upload/drive/v3/files/{%s}?uploadType=resumable", video.get().id())),
                             new JsonHttpContent(getDefaultInstance(), fileMetadata))
                     :
                     requestFactory.buildPostRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "?uploadType=resumable")),

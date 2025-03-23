@@ -13,7 +13,7 @@ class AssetsApiApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println(videoService.findVideoBy("1x_sOP-aonB_MtIofiiyI2fBKen15YCGH","cover-video"));
+        System.out.println(videoService.getVideo("1DM73kdlkubIxUCtHVqk3NGHJjjwkQ5e-"));
     }
 
 }
