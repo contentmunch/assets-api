@@ -21,5 +21,15 @@ public interface VideoService {
 
     VideoAssets findVideosByFolderId(String folderId, Integer pageSize, String pageToken);
 
+    default Optional<VideoAsset> findVideoBy(String folderId, String name) {
+        var videoAssets = findVideos(folderId, name, 1, null);
+        if (videoAssets.videoAssets().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(videoAssets.videoAssets().get(0));
+    }
+
+    VideoAssets findVideos(String folderId, String name, Integer pageSize, String pageToken);
+
     void deleteVideo(String id);
 }

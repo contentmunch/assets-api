@@ -118,6 +118,38 @@ public class GoogleDriveVideoService implements VideoService {
     }
 
     @Override
+    public VideoAssets findVideos(String folderId, String name, Integer pageSize, String pageToken) {
+        try {
+            log.debug("Listing drive: {} for name: {} with pageSize: {} and pageToken {}", folderId, name, pageSize, pageToken);
+            Drive.Files.List list = drive.files().list()
+                    .setQ(String.format("'%s' in parents and name = '%s'", folderId, name))
+                    .setPageSize(Optional.ofNullable(pageSize).orElse(DEFAULT_PAGE_SIZE))
+                    .setOrderBy("modifiedTime desc")
+                    .setFields("nextPageToken, files(" + VIDEO_FIELDS + ")");
+
+            if (pageToken != null) {
+                list.setPageToken(pageToken);
+            }
+
+            FileList result = list.execute();
+
+
+            return VideoAssets
+                    .builder()
+                    .videoAssets(result.getFiles().stream()
+                            .filter(file -> file.getMimeType().contains("video"))
+                            .map(this::buildVideoMetadata)
+                            .collect(Collectors.toList()))
+                    .nextPageToken(result.getNextPageToken())
+                    .build();
+
+        } catch (IOException e) {
+            log.error("IO Exception", e);
+            throw new AssetException(e.getMessage());
+        }
+    }
+
+    @Override
     public void deleteVideo(String id) {
         try {
             drive.files().delete(id).execute();
@@ -130,14 +162,21 @@ public class GoogleDriveVideoService implements VideoService {
     @Override
     public VideoUploadMetadata initiateVideoUpload(String folderId, String name, String description, String mimeType) {
         try {
+
             File fileMetadata = new File();
             fileMetadata.setName(name);
             fileMetadata.setParents(List.of(folderId));
             fileMetadata.setMimeType(mimeType);
             fileMetadata.setDescription(description);
 
-            HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "?uploadType=resumable")),
-                    new JsonHttpContent(getDefaultInstance(), fileMetadata));
+            var isFilePresent = findVideoBy(folderId, name).isPresent();
+
+            HttpRequest request = isFilePresent ?
+                    requestFactory.buildPutRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "?uploadType=resumable")),
+                            new JsonHttpContent(getDefaultInstance(), fileMetadata))
+                    :
+                    requestFactory.buildPostRequest(new GenericUrl(String.format(UPLOAD_URL_FORMAT, "?uploadType=resumable")),
+                            new JsonHttpContent(getDefaultInstance(), fileMetadata));
 
             request.getHeaders().setAuthorization("Bearer " + getAccessToken());
             request.getHeaders().set("X-Upload-Content-Type", mimeType);
