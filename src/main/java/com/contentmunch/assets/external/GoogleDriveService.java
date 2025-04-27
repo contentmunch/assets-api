@@ -271,8 +271,17 @@ public class GoogleDriveService {
     public DriveAsset create(String folderId, MultipartFile multipartFile, String name, Optional<String> description) {
         return get(folderId, name).orElseGet(() ->
                 handleFileOperation(() -> {
-                    File fileMetadata = createFileMetadata(name, description.or(() -> Optional.of(stripExtension(multipartFile.getOriginalFilename()))), folderId);
-                    FileContent mediaContent = new FileContent(multipartFile.getContentType(), from(multipartFile));
+                    // File metadata
+                    File fileMetadata = createFileMetadata(name, description.or(() -> Optional.ofNullable(stripExtension(multipartFile.getOriginalFilename()))), folderId);
+
+                    // Get InputStream from MultipartFile
+                    InputStream inputStream = multipartFile.getInputStream();
+
+                    // Create InputStreamContent for file upload
+                    InputStreamContent mediaContent = new InputStreamContent(
+                            multipartFile.getContentType(), inputStream);
+
+                    // Upload to Google Drive (or similar cloud service)
                     return drive.files().create(fileMetadata, mediaContent)
                             .setFields(IMAGE_FIELDS)
                             .setSupportsAllDrives(true)
